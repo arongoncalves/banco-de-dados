@@ -1,0 +1,24 @@
+-- 1. Criação da tabela e inserção de dados
+CREATE TABLE livros (
+  livro_id INT,
+  valor DECIMAL(10,2)
+);
+
+INSERT INTO livros VALUES (1, 45.0);
+INSERT INTO livros VALUES (2, 55.0);
+INSERT INTO livros VALUES (3, 30.0);
+
+-- 2. Criação do procedimento armazenado
+-- O DELIMITER é usado para que o MySQL entenda onde termina o procedure
+DELIMITER //
+
+CREATE PROCEDURE MediaPrecosLivros(IN p_id_livro INT)
+BEGIN
+    SELECT AVG(valor) FROM livros;
+END //
+
+DELIMITER ;
+
+-- 3. Chamada do procedimento para testar
+CALL MediaNotasAluno(99); 
+
