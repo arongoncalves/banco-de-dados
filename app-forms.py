@@ -1,6 +1,6 @@
 import sqlite3
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox, ttk
 
 
 class SistemaCadastroClientes:
@@ -8,7 +8,7 @@ class SistemaCadastroClientes:
     def __init__(self, root):
         self.root = root
         self.root.title("Cadastro de Clientes")
-        self.root.geometry("400x260")
+        self.root.geometry("460x260")
         self.root.resizable(False, False)
 
         # Inicializa o banco de dados e cria a tabela
@@ -41,7 +41,7 @@ class SistemaCadastroClientes:
         tk.Label(frame_principal, text="Nome Completo:", font=("Arial", 10)).grid(
             row=0, column=0, sticky=tk.W, pady=5
         )
-        self.entry_nome = tk.Entry(frame_principal, width=32, font=("Arial", 10))
+        self.entry_nome = tk.Entry(frame_principal, width=36, font=("Arial", 10))
         self.entry_nome.grid(row=0, column=1, pady=5, padx=(10, 0))
 
         # Campo: E-mail
@@ -49,7 +49,7 @@ class SistemaCadastroClientes:
             row=1, column=0, sticky=tk.W, pady=5
         )
         self.entry_email = tk.Entry(
-            frame_principal, width=32, font=("Arial", 10)
+            frame_principal, width=36, font=("Arial", 10)
         )
         self.entry_email.grid(row=1, column=1, pady=5, padx=(10, 0))
 
@@ -58,7 +58,7 @@ class SistemaCadastroClientes:
             row=2, column=0, sticky=tk.W, pady=5
         )
         self.entry_telefone = tk.Entry(
-            frame_principal, width=32, font=("Arial", 10)
+            frame_principal, width=36, font=("Arial", 10)
         )
         self.entry_telefone.grid(row=2, column=1, pady=5, padx=(10, 0))
 
@@ -70,25 +70,37 @@ class SistemaCadastroClientes:
         btn_salvar = tk.Button(
             frame_botoes,
             text="Salvar",
-            width=14,
+            width=12,
             bg="#4CAF50",
             fg="white",
             font=("Arial", 10, "bold"),
             command=self.salvar_cliente,
         )
-        btn_salvar.pack(side=tk.LEFT, padx=10)
+        btn_salvar.pack(side=tk.LEFT, padx=5)
 
         # Botão Limpar
         btn_limpar = tk.Button(
             frame_botoes,
             text="Limpar",
-            width=14,
+            width=12,
             bg="#f44336",
             fg="white",
             font=("Arial", 10, "bold"),
             command=self.limpar_formulario,
         )
-        btn_limpar.pack(side=tk.LEFT, padx=10)
+        btn_limpar.pack(side=tk.LEFT, padx=5)
+
+        # Botão Visualizar Clientes (Novo requisito)
+        btn_visualizar = tk.Button(
+            frame_botoes,
+            text="Visualizar Clientes",
+            width=16,
+            bg="#2196F3",
+            fg="white",
+            font=("Arial", 10, "bold"),
+            command=self.visualizar_clientes,
+        )
+        btn_visualizar.pack(side=tk.LEFT, padx=5)
 
     def salvar_cliente(self):
         """Valida os campos e insere os dados no banco de dados SQLite."""
@@ -128,6 +140,55 @@ class SistemaCadastroClientes:
         self.entry_email.delete(0, tk.END)
         self.entry_telefone.delete(0, tk.END)
         self.entry_nome.focus_set()
+
+    def visualizar_clientes(self):
+        """Abre uma nova janela exibindo todos os clientes cadastrados no banco."""
+        try:
+            conexao = sqlite3.connect("clientes.db")
+            cursor = conexao.cursor()
+            cursor.execute("SELECT id, nome, email, telefone FROM clientes")
+            registros = cursor.fetchall()
+            conexao.close()
+        except sqlite3.Error as erro:
+            messagebox.showerror(
+                "Erro no Banco de Dados", f"Não foi possível carregar os dados: {erro}"
+            )
+            return
+
+        # Cria a nova janela secundária (Toplevel)
+        janela_lista = tk.Toplevel(self.root)
+        janela_lista.title("Clientes Cadastrados")
+        janela_lista.geometry("620x350")
+
+        frame_tabela = tk.Frame(janela_lista, padx=15, pady=15)
+        frame_tabela.pack(fill=tk.BOTH, expand=True)
+
+        # Configuração da tabela (Treeview)
+        colunas = ("id", "nome", "email", "telefone")
+        tabela = ttk.Treeview(frame_tabela, columns=colunas, show="headings")
+
+        tabela.heading("id", text="ID")
+        tabela.heading("nome", text="Nome Completo")
+        tabela.heading("email", text="E-mail")
+        tabela.heading("telefone", text="Telefone")
+
+        tabela.column("id", width=50, anchor=tk.CENTER)
+        tabela.column("nome", width=200, anchor=tk.W)
+        tabela.column("email", width=200, anchor=tk.W)
+        tabela.column("telefone", width=120, anchor=tk.CENTER)
+
+        # Barra de rolagem vertical
+        scrollbar = ttk.Scrollbar(
+            frame_tabela, orient=tk.VERTICAL, command=tabela.yview
+        )
+        tabela.configure(yscrollcommand=scrollbar.set)
+
+        tabela.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+        # Preenche a tabela com os registros do SQLite
+        for cliente in registros:
+            tabela.insert("", tk.END, values=cliente)
 
 
 if __name__ == "__main__":
